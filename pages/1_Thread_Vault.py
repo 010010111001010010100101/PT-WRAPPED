@@ -75,7 +75,8 @@ if not os.path.exists(DB):
 
 meta = _meta()
 st.title("PT Thread Vault")
-st.caption(f"Every PT thread with 100+ posts — {int(meta.get('thread_count', 0)):,} of them, "
+st.caption(f"Every PT thread with {meta.get('min_posts','50')}+ posts — "
+           f"{int(meta.get('thread_count', 0)):,} of them, "
            f"{meta.get('span_lo','')[:4]}–{meta.get('span_hi','')[:4]}. "
            "Threads lock after 3 months, but the link lives here forever. Search and dig in.")
 
