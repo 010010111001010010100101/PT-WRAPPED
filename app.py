@@ -6,7 +6,7 @@ Deep-linkable: ?user=<name> pre-loads a personal Wrapped.
 """
 import streamlit as st
 import plotly.graph_objects as go
-import datetime, html, json, os, sqlite3
+import base64, datetime, html, json, os, sqlite3
 
 YEAR = 2025
 DB = os.path.join(os.path.dirname(__file__), "data", f"wrapped_{YEAR}.db")
@@ -18,13 +18,51 @@ st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
 h1 {
     font-family: 'Space Grotesk', 'Segoe UI', sans-serif !important;
-    background: linear-gradient(90deg, #9b8cff, #5ce0c0);
+    background: linear-gradient(90deg, #ffd166, #ff8a3d, #ff5c8a, #9b8cff, #5ce0c0);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
 }
 .block-container { padding-top: 2.2rem; max-width: 760px; }
+
+/* splashy tie-dye wash — palette pulled from the header photos */
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(620px at 12% 8%,  rgba(255, 138, 61, 0.16), transparent 65%),
+        radial-gradient(540px at 88% 14%, rgba(124, 92, 255, 0.20), transparent 65%),
+        radial-gradient(700px at 75% 75%, rgba(217, 43, 75, 0.13), transparent 65%),
+        radial-gradient(520px at 18% 88%, rgba(92, 224, 192, 0.12), transparent 65%),
+        radial-gradient(420px at 50% 45%, rgba(255, 209, 102, 0.07), transparent 65%),
+        #0f0f14;
+    background-attachment: fixed;
+}
+[data-testid="stHeader"] { background: transparent; }
+
+.polaroids { display: flex; justify-content: center; gap: 6px; margin: 6px 0 18px; }
+.polaroids img {
+    height: 120px; width: auto; object-fit: cover;
+    border: 5px solid #f2efe6; border-bottom-width: 16px; border-radius: 2px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    transition: transform 0.18s ease;
+}
+.polaroids img:nth-child(1) { transform: rotate(-3.5deg); }
+.polaroids img:nth-child(2) { transform: rotate(2deg) translateY(4px); }
+.polaroids img:nth-child(3) { transform: rotate(4deg); }
+.polaroids img:hover { transform: rotate(0deg) scale(1.45); z-index: 10; }
 </style>""", unsafe_allow_html=True)
+
+
+@st.cache_data
+def _polaroids():
+    tags = []
+    adir = os.path.join(os.path.dirname(__file__), "assets")
+    for name in ("bigjerr", "wrestler", "wspsux"):
+        p = os.path.join(adir, f"{name}.jpg")
+        if os.path.exists(p):
+            with open(p, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+            tags.append(f'<img src="data:image/jpeg;base64,{b64}" alt="">')
+    return f'<div class="polaroids">{"".join(tags)}</div>' if tags else ""
 
 
 def _card(title, value, sub="", accent="#9b8cff", big=False):
@@ -124,6 +162,7 @@ total, unique = int(meta["total"]), int(meta["unique"])
 n_posters = _db().execute("SELECT COUNT(*) FROM user_stats").fetchone()[0]
 
 st.title(f"PT Wrapped {YEAR}")
+st.markdown(_polaroids(), unsafe_allow_html=True)
 st.caption("A year of Phantasy Tour, by the numbers. Type your handle for your personal Wrapped — "
            "then share the URL, it links straight to you.")
 
