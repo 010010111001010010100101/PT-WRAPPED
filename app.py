@@ -48,12 +48,16 @@ h1 {
 }
 .polaroids img:hover { transform: rotate(0deg) scale(1.45); z-index: 10; }
 
-/* WSP SUX Jerry — full-height column filling the right gutter */
+/* WSP SUX Jerry — full image, full screen height, undistorted.
+   Width locked to the source aspect ratio (236/433 ≈ 0.545) so the
+   whole image fills the panel with no crop and no stretch. */
 .side-right {
     position: fixed; right: 0; top: 0; height: 100vh;
-    width: min(calc((100vw - 600px) / 2), 760px);
-    object-fit: cover; object-position: top center; z-index: 0; opacity: 0.94;
-    border-left: 3px solid #26262f;
+    width: calc(100vh * 0.545);
+    background-size: contain;
+    background-position: center right;
+    background-repeat: no-repeat;
+    z-index: 0; opacity: 0.96;
     box-shadow: -10px 0 30px rgba(0,0,0,0.5);
 }
 /* wrestler — big sticker filling the top-left gutter */
@@ -81,6 +85,12 @@ def _img(name, cls):
     b64 = _b64(name)
     return (f'<img class="{cls}" src="data:image/jpeg;base64,{b64}" alt="">'
             if b64 else "")
+
+
+def _bg(name, cls):
+    b64 = _b64(name)
+    return (f'<div class="{cls}" style="background-image:'
+            f'url(data:image/jpeg;base64,{b64})"></div>' if b64 else "")
 
 
 def _polaroids():
@@ -185,7 +195,7 @@ total, unique = int(meta["total"]), int(meta["unique"])
 n_posters = _db().execute("SELECT COUNT(*) FROM user_stats").fetchone()[0]
 
 st.title(f"PT WRAPPED {YEAR}")
-st.markdown(_img("wspsux", "side-right") + _img("wrestler", "corner-left")
+st.markdown(_bg("wspsux", "side-right") + _img("wrestler", "corner-left")
             + _polaroids(), unsafe_allow_html=True)
 st.caption("A year of Phantasy Tour, by the numbers. Type your handle for your personal Wrapped — "
            "then share the URL, it links straight to you.")
