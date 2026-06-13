@@ -43,9 +43,10 @@ h1 {
     height: 120px; width: auto; object-fit: cover;
     border: 5px solid #f2efe6; border-bottom-width: 16px; border-radius: 2px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.55);
-    transform: rotate(-2deg);
     transition: transform 0.18s ease;
 }
+.polaroids img:nth-child(1) { transform: rotate(-3deg); }
+.polaroids img:nth-child(2) { transform: rotate(2.5deg); }
 .polaroids img:hover { transform: rotate(0deg) scale(1.45); z-index: 10; }
 
 /* WSP SUX Jerry — full image, full screen height, undistorted.
@@ -99,8 +100,8 @@ def _bg(name, cls):
 
 
 def _polaroids():
-    tag = _img("bigjerr", "")
-    return f'<div class="polaroids">{tag}</div>' if tag else ""
+    tags = _img("bigjerr", "") + _img("fishman", "")
+    return f'<div class="polaroids">{tags}</div>' if tags else ""
 
 
 def _card(title, value, sub="", accent="#9b8cff", big=False):
