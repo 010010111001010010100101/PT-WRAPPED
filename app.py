@@ -60,15 +60,20 @@ h1 {
     z-index: 0; opacity: 0.96;
     box-shadow: -10px 0 30px rgba(0,0,0,0.5);
 }
-/* wrestler — big sticker filling the top-left gutter */
-.corner-left {
-    position: fixed; top: 16px; left: 12px;
+/* left gutter — stacked sticker collage (wrestler, then Trey) */
+.left-stack {
+    position: fixed; top: 16px; left: 12px; z-index: 0;
     width: min(calc((100vw - 600px) / 2 - 18px), 560px);
-    transform: rotate(-4deg); z-index: 0;
+    display: flex; flex-direction: column; gap: 18px;
+}
+.left-stack img {
+    width: 100%; display: block;
     border: 6px solid #f2efe6; border-bottom-width: 20px; border-radius: 2px;
     box-shadow: 0 10px 28px rgba(0,0,0,0.6);
 }
-@media (max-width: 1100px) { .side-right, .corner-left { display: none; } }
+.left-stack img:nth-child(1) { transform: rotate(-4deg); }
+.left-stack img:nth-child(2) { transform: rotate(3deg); }
+@media (max-width: 1100px) { .side-right, .left-stack { display: none; } }
 </style>""", unsafe_allow_html=True)
 
 
@@ -195,7 +200,8 @@ total, unique = int(meta["total"]), int(meta["unique"])
 n_posters = _db().execute("SELECT COUNT(*) FROM user_stats").fetchone()[0]
 
 st.title(f"PT WRAPPED {YEAR}")
-st.markdown(_bg("wspsux", "side-right") + _img("wrestler", "corner-left")
+st.markdown(_bg("wspsux", "side-right")
+            + f'<div class="left-stack">{_img("wrestler", "")}{_img("trey", "")}</div>'
             + _polaroids(), unsafe_allow_html=True)
 st.caption("A year of Phantasy Tour, by the numbers. Type your handle for your personal Wrapped — "
            "then share the URL, it links straight to you.")
