@@ -48,21 +48,23 @@ h1 {
 }
 .polaroids img:hover { transform: rotate(0deg) scale(1.45); z-index: 10; }
 
-/* WSP SUX Jerry — full-height column pinned to the right edge */
+/* WSP SUX Jerry — full-height column filling the right gutter */
 .side-right {
-    position: fixed; right: 0; top: 0; height: 100vh; width: 190px;
-    object-fit: cover; z-index: 0; opacity: 0.92;
+    position: fixed; right: 0; top: 0; height: 100vh;
+    width: min(calc((100vw - 820px) / 2), 480px);
+    object-fit: cover; object-position: top center; z-index: 0; opacity: 0.94;
     border-left: 3px solid #26262f;
     box-shadow: -10px 0 30px rgba(0,0,0,0.5);
 }
-/* wrestler — pinned top-left like a slapped-on sticker */
+/* wrestler — big sticker filling the top-left gutter */
 .corner-left {
-    position: fixed; top: 14px; left: 14px; width: 250px;
-    transform: rotate(-5deg); z-index: 0;
-    border: 5px solid #f2efe6; border-bottom-width: 16px; border-radius: 2px;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.6);
+    position: fixed; top: 16px; left: 12px;
+    width: min(calc((100vw - 820px) / 2 - 18px), 470px);
+    transform: rotate(-4deg); z-index: 0;
+    border: 6px solid #f2efe6; border-bottom-width: 20px; border-radius: 2px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.6);
 }
-@media (max-width: 1280px) { .side-right, .corner-left { display: none; } }
+@media (max-width: 1150px) { .side-right, .corner-left { display: none; } }
 </style>""", unsafe_allow_html=True)
 
 
