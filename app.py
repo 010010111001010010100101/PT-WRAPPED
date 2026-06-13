@@ -23,7 +23,7 @@ h1 {
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
 }
-.block-container { padding-top: 2.2rem; max-width: 720px; }
+.block-container { padding-top: 2.2rem; max-width: 820px; }
 
 /* splashy tie-dye wash — palette pulled from the header photos */
 [data-testid="stAppViewContainer"] {
@@ -49,23 +49,23 @@ h1 {
 .polaroids img:nth-child(2) { transform: rotate(2.5deg); }
 .polaroids img:hover { transform: rotate(0deg) scale(1.45); z-index: 10; }
 
-/* WSP SUX Jerry — full image, full screen height, undistorted.
-   Width locked to the source aspect ratio (236/433 ≈ 0.545) so the
-   whole image fills the panel with no crop and no stretch. */
+/* WSP SUX Jerry — whole image, undistorted, anchored bottom-right.
+   Width locked to source aspect (236/433 ≈ 0.545); subtle so it sits
+   behind the content rather than competing with it. */
 .side-right {
-    position: fixed; right: 0; top: 0; height: 100vh;
-    width: calc(100vh * 0.545);
+    position: fixed; right: 0; bottom: 0; height: 82vh;
+    width: calc(82vh * 0.545);
     background-size: contain;
-    background-position: center right;
+    background-position: bottom right;
     background-repeat: no-repeat;
-    z-index: 0; opacity: 0.96;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    z-index: 0; opacity: 0.75;
 }
 /* left gutter — stacked sticker collage (wrestler, then Trey) */
 .left-stack {
     position: fixed; top: 16px; left: 12px; z-index: 0;
-    width: min(calc((100vw - 600px) / 2 - 18px), 560px);
+    width: min(calc((100vw - 820px) / 2 - 16px), 380px);
     display: flex; flex-direction: column; gap: 18px;
+    opacity: 0.82;
 }
 .left-stack img {
     width: 100%; display: block;
@@ -105,7 +105,7 @@ def _polaroids():
 
 
 def _card(title, value, sub="", accent="#9b8cff", big=False):
-    size = "54px" if big else "32px"
+    size = "54px" if big else "35px"
     st.markdown(
         f"""<div style="background:linear-gradient(135deg,#16161e,#1b1b2a);
             border:1px solid #26262f;border-radius:16px;padding:24px 28px;margin:8px 0;">
