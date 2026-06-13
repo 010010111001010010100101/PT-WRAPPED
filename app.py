@@ -203,7 +203,7 @@ st.caption("A year of Phantasy Tour, by the numbers. Type your handle for your p
 # ── Personal lookup (deep-linkable) ──────────────────────────────────────────
 qp_user = st.query_params.get("user", "")
 username = st.text_input("Your PT username", value=qp_user,
-                         placeholder="e.g. yooser").strip()
+                         placeholder="e.g. pglace").strip()
 if username:
     st.query_params["user"] = username
 elif "user" in st.query_params:
