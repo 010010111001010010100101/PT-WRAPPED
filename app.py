@@ -230,8 +230,10 @@ if username:
                         unsafe_allow_html=True,
                     )
         if u.get("top_started") and u.get("top_started_posts"):
+            drew = ("hit the 499 cap" if u["top_started_posts"] >= 499
+                    else f"drew {u['top_started_posts']:,} posts")
             _card("Best thread you started", html.escape(u["top_started"]),
-                  f"drew {u['top_started_posts']:,} posts", accent="#ffd166")
+                  drew, accent="#ffd166")
 
         hours = json.loads(u["hours"])
         if any(hours):
@@ -278,19 +280,36 @@ def _setlist_ok(subject):
     return include_setlists or "setlist" not in (subject or "").lower()
 
 
-st.markdown("#### Fastest to the cap")
-st.caption("PT locks every thread at 500 posts — these hit the wall fastest.")
+st.markdown("#### Fastest to 499")
+st.caption("PT locks every thread at the cap — these hit it fastest.")
 capped = sorted((t for t in _top_threads() if t[3] and _setlist_ok(t[0])),
                 key=lambda t: t[3])
-for i, (subject, c, started, hours) in enumerate(capped[:15]):
+for i, (subject, c, started, hours) in enumerate(capped[:30]):
     _row(i, html.escape(subject or "(unknown)"), _fmt_span(hours),
          sub=f"started {started}")
+
+st.markdown("#### The year in threads")
+tt, cap_n = int(meta.get("threads_total", 0)), int(meta.get("capped_count", 0))
+if tt:
+    c1, c2 = st.columns(2)
+    with c1:
+        _card("Threads born", f"{tt:,}", f"new threads started in {YEAR}",
+              accent="#9b8cff")
+    with c2:
+        _card("Hit the 499 cap", f"{cap_n:,}",
+              f"{cap_n / tt * 100:.1f}% of new threads filled completely",
+              accent="#ff8a3d")
+starters = _table("SELECT username, threads FROM top_starters ORDER BY rank")
+if starters:
+    st.markdown("##### Most threads started")
+    for i, (name, c) in enumerate(starters[:25]):
+        _row(i, f"<b>{html.escape(name)}</b>", f"{c:,} threads")
 
 if include_setlists:
     st.markdown("#### Biggest threads")
     st.caption("Setlist threads are exempt from the cap, so raw size means something here.")
-    big = [t for t in _top_threads() if _setlist_ok(t[0])]
-    for i, (subject, c, started, hours) in enumerate(big[:10]):
+    big = [t for t in _top_threads() if t[1] > 510 and _setlist_ok(t[0])]
+    for i, (subject, c, started, hours) in enumerate(big[:15]):
         _row(i, html.escape(subject or "(unknown)"), f"{c:,} posts",
              sub=f"started {started}" if started else "")
 
@@ -299,7 +318,7 @@ if include_setlists:
     days = [(s, d, c) for s, d, c in
             _table("SELECT subject, day, posts FROM thread_days ORDER BY rank")
             if c < 495 or "setlist" in (s or "").lower()]
-    for i, (subject, day, c) in enumerate(days[:10]):
+    for i, (subject, day, c) in enumerate(days[:15]):
         _row(i, html.escape(subject or "(unknown)"), f"{c:,} posts", sub=day)
 
 st.markdown("#### Highest Post Count")
