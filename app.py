@@ -23,7 +23,7 @@ h1 {
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
 }
-.block-container { padding-top: 2.2rem; max-width: 600px; }
+.block-container { padding-top: 2.2rem; max-width: 720px; }
 
 /* splashy tie-dye wash — palette pulled from the header photos */
 [data-testid="stAppViewContainer"] {
@@ -105,7 +105,7 @@ def _polaroids():
 
 
 def _card(title, value, sub="", accent="#9b8cff", big=False):
-    size = "54px" if big else "38px"
+    size = "54px" if big else "32px"
     st.markdown(
         f"""<div style="background:linear-gradient(135deg,#16161e,#1b1b2a);
             border:1px solid #26262f;border-radius:16px;padding:24px 28px;margin:8px 0;">
