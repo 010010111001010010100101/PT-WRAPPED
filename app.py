@@ -23,7 +23,7 @@ h1 {
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
 }
-.block-container { padding-top: 2.2rem; max-width: 760px; }
+.block-container { padding-top: 2.2rem; max-width: 600px; }
 
 /* splashy tie-dye wash — palette pulled from the header photos */
 [data-testid="stAppViewContainer"] {
@@ -51,7 +51,7 @@ h1 {
 /* WSP SUX Jerry — full-height column filling the right gutter */
 .side-right {
     position: fixed; right: 0; top: 0; height: 100vh;
-    width: min(calc((100vw - 820px) / 2), 480px);
+    width: min(calc((100vw - 600px) / 2), 760px);
     object-fit: cover; object-position: top center; z-index: 0; opacity: 0.94;
     border-left: 3px solid #26262f;
     box-shadow: -10px 0 30px rgba(0,0,0,0.5);
@@ -59,12 +59,12 @@ h1 {
 /* wrestler — big sticker filling the top-left gutter */
 .corner-left {
     position: fixed; top: 16px; left: 12px;
-    width: min(calc((100vw - 820px) / 2 - 18px), 470px);
+    width: min(calc((100vw - 600px) / 2 - 18px), 560px);
     transform: rotate(-4deg); z-index: 0;
     border: 6px solid #f2efe6; border-bottom-width: 20px; border-radius: 2px;
     box-shadow: 0 10px 28px rgba(0,0,0,0.6);
 }
-@media (max-width: 1150px) { .side-right, .corner-left { display: none; } }
+@media (max-width: 1100px) { .side-right, .corner-left { display: none; } }
 </style>""", unsafe_allow_html=True)
 
 
