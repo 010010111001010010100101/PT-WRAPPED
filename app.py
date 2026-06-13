@@ -257,17 +257,29 @@ if username:
 # ── Board recap ──────────────────────────────────────────────────────────────
 st.markdown(f"## The board's {YEAR}")
 st.caption("Everything below is board-wide — all of PT, not just you.")
-_card(f"{YEAR} on Phantasy Tour", f"{total:,} posts",
-      f"from {unique:,} posters", big=True)
 
-c1, c2, c3 = st.columns(3)
-days_in_year = 366 if YEAR % 4 == 0 else 365
+st.markdown("#### The year in threads")
+tt, cap_n = int(meta.get("threads_total", 0)), int(meta.get("capped_count", 0))
+if tt:
+    c1, c2 = st.columns(2)
+    with c1:
+        _card("Threads born", f"{tt:,}", f"new threads started in {YEAR}",
+              accent="#9b8cff")
+    with c2:
+        _card("Hit the 499 cap", f"{cap_n:,}",
+              f"{cap_n / tt * 100:.1f}% of new threads filled completely",
+              accent="#ff8a3d")
+starters = _table("SELECT username, threads FROM top_starters ORDER BY rank")
+if starters:
+    st.markdown("##### Most threads started")
+    for i, (name, c) in enumerate(starters[:25]):
+        _row(i, f"<b>{html.escape(name)}</b>", f"{c:,} threads")
+
+c1, c2 = st.columns(2)
 with c1:
-    _card("Pace", f"{total / days_in_year:,.0f}", "posts per day", accent="#5ce0c0")
-with c2:
     _card("Biggest day", _fmt_day(meta["busiest_day"]),
           f"{int(meta['busiest_count']):,} posts", accent="#ff8a3d")
-with c3:
+with c2:
     prev = int(meta["prev_total"])
     yoy = f"{(total - prev) / prev * 100:+.0f}%" if prev else "—"
     _card("vs last year", yoy, f"{prev:,} posts in {YEAR-1}" if prev else "",
@@ -287,23 +299,6 @@ capped = sorted((t for t in _top_threads() if t[3] and _setlist_ok(t[0])),
 for i, (subject, c, started, hours) in enumerate(capped[:30]):
     _row(i, html.escape(subject or "(unknown)"), _fmt_span(hours),
          sub=f"started {started}")
-
-st.markdown("#### The year in threads")
-tt, cap_n = int(meta.get("threads_total", 0)), int(meta.get("capped_count", 0))
-if tt:
-    c1, c2 = st.columns(2)
-    with c1:
-        _card("Threads born", f"{tt:,}", f"new threads started in {YEAR}",
-              accent="#9b8cff")
-    with c2:
-        _card("Hit the 499 cap", f"{cap_n:,}",
-              f"{cap_n / tt * 100:.1f}% of new threads filled completely",
-              accent="#ff8a3d")
-starters = _table("SELECT username, threads FROM top_starters ORDER BY rank")
-if starters:
-    st.markdown("##### Most threads started")
-    for i, (name, c) in enumerate(starters[:25]):
-        _row(i, f"<b>{html.escape(name)}</b>", f"{c:,} threads")
 
 if include_setlists:
     st.markdown("#### Biggest threads")
