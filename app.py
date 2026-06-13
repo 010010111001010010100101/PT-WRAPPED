@@ -43,26 +43,47 @@ h1 {
     height: 120px; width: auto; object-fit: cover;
     border: 5px solid #f2efe6; border-bottom-width: 16px; border-radius: 2px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    transform: rotate(-2deg);
     transition: transform 0.18s ease;
 }
-.polaroids img:nth-child(1) { transform: rotate(-3.5deg); }
-.polaroids img:nth-child(2) { transform: rotate(2deg) translateY(4px); }
-.polaroids img:nth-child(3) { transform: rotate(4deg); }
 .polaroids img:hover { transform: rotate(0deg) scale(1.45); z-index: 10; }
+
+/* WSP SUX Jerry — full-height column pinned to the right edge */
+.side-right {
+    position: fixed; right: 0; top: 0; height: 100vh; width: 190px;
+    object-fit: cover; z-index: 0; opacity: 0.92;
+    border-left: 3px solid #26262f;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+}
+/* wrestler — pinned top-left like a slapped-on sticker */
+.corner-left {
+    position: fixed; top: 14px; left: 14px; width: 250px;
+    transform: rotate(-5deg); z-index: 0;
+    border: 5px solid #f2efe6; border-bottom-width: 16px; border-radius: 2px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.6);
+}
+@media (max-width: 1280px) { .side-right, .corner-left { display: none; } }
 </style>""", unsafe_allow_html=True)
 
 
 @st.cache_data
+def _b64(name):
+    p = os.path.join(os.path.dirname(__file__), "assets", f"{name}.jpg")
+    if not os.path.exists(p):
+        return None
+    with open(p, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+def _img(name, cls):
+    b64 = _b64(name)
+    return (f'<img class="{cls}" src="data:image/jpeg;base64,{b64}" alt="">'
+            if b64 else "")
+
+
 def _polaroids():
-    tags = []
-    adir = os.path.join(os.path.dirname(__file__), "assets")
-    for name in ("bigjerr", "wrestler", "wspsux"):
-        p = os.path.join(adir, f"{name}.jpg")
-        if os.path.exists(p):
-            with open(p, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode()
-            tags.append(f'<img src="data:image/jpeg;base64,{b64}" alt="">')
-    return f'<div class="polaroids">{"".join(tags)}</div>' if tags else ""
+    tag = _img("bigjerr", "")
+    return f'<div class="polaroids">{tag}</div>' if tag else ""
 
 
 def _card(title, value, sub="", accent="#9b8cff", big=False):
@@ -161,8 +182,9 @@ meta = _meta()
 total, unique = int(meta["total"]), int(meta["unique"])
 n_posters = _db().execute("SELECT COUNT(*) FROM user_stats").fetchone()[0]
 
-st.title(f"PT Wrapped {YEAR}")
-st.markdown(_polaroids(), unsafe_allow_html=True)
+st.title(f"PT WRAPPED {YEAR}")
+st.markdown(_img("wspsux", "side-right") + _img("wrestler", "corner-left")
+            + _polaroids(), unsafe_allow_html=True)
 st.caption("A year of Phantasy Tour, by the numbers. Type your handle for your personal Wrapped — "
            "then share the URL, it links straight to you.")
 
