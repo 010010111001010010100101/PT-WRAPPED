@@ -3,7 +3,7 @@ with a permanent link so it survives PT's 3-month lock. Reads archive.db
 (built by pt_webapp/build_archive.py). No raw post data.
 """
 import streamlit as st
-import html, os, sqlite3
+import datetime, html, os, sqlite3
 
 DB = os.path.join(os.path.dirname(__file__), "..", "data", "archive.db")
 PT = "https://www.phantasytour.com/bands/1/threads"
@@ -52,7 +52,7 @@ def _meta():
 
 
 @st.cache_data(show_spinner=False)
-def _search(term, setlists, sort, limit=150):
+def _search(term, setlists, sort, yr_lo, yr_hi, limit=150):
     # Span/intensity use julianday on the YYYY-MM-DD date strings; +1 day avoids
     # divide-by-zero on same-day threads. ORDER strings are fixed (not user input).
     order = {
@@ -71,6 +71,8 @@ def _search(term, setlists, sort, limit=150):
         params.append(f"%{term}%")
     if not setlists:
         where.append("is_setlist = 0")
+    where.append("first_date >= ? AND first_date <= ?")
+    params.extend([f"{yr_lo}-01-01", f"{yr_hi}-12-31"])
     params.append(limit)
     return _db().execute(
         f"SELECT subject, slug, topic_id, posts, first_date, last_date FROM threads "
@@ -105,9 +107,16 @@ c1, c2 = st.columns([3, 2])
 term = c1.text_input("Search thread titles", placeholder="e.g. coventry, sphere, treason").strip()
 sort = c2.selectbox("Sort", ["Most posts", "Newest", "Oldest", "Recently active",
                              "Longest-running", "Fastest growing", "Title A–Z"])
+
+span_lo = int((meta.get("span_lo") or "2002")[:4])
+span_hi = int((meta.get("span_hi") or str(datetime.date.today().year))[:4])
+if span_hi > span_lo:
+    yr_lo, yr_hi = st.slider("Year started", span_lo, span_hi, (span_lo, span_hi))
+else:
+    yr_lo, yr_hi = span_lo, span_hi
 setlists = st.checkbox("Include setlist threads", value=False)
 
-rows = _search(term, setlists, sort)
+rows = _search(term, setlists, sort, yr_lo, yr_hi)
 if not rows:
     st.info("No threads match. Try a shorter or different term.")
 else:
