@@ -74,6 +74,10 @@ if not os.path.exists(DB):
     st.stop()
 
 meta = _meta()
+try:
+    st.page_link("app.py", label="← Back to PT Wrapped")
+except Exception:
+    st.markdown("[← Back to PT Wrapped](/)")
 st.title("PT Thread Vault")
 st.caption(f"Every PT thread with {meta.get('min_posts','50')}+ posts — "
            f"{int(meta.get('thread_count', 0)):,} of them, "
@@ -91,14 +95,18 @@ if not rows:
 else:
     st.caption(f"Showing {len(rows)} thread{'s' if len(rows) != 1 else ''}"
                + (" (capped at 150 — narrow your search for more)" if len(rows) == 150 else ""))
+    # Render all rows in one markdown call — 150 separate st.markdown widgets made
+    # every keystroke re-render the whole list, freezing the search box.
+    blocks = []
     for subject, slug, tid, posts, first, last in rows:
         url = f"{PT}/{tid}/{slug}" if tid else "#"
-        span = first[:7] if first[:7] == (last or "")[:7] else f"{first[:7]} → {last[:7]}"
-        st.markdown(
+        lo, hi = (first or "")[:7], (last or "")[:7]
+        span = lo if lo == hi else f"{lo} → {hi}".strip(" →")
+        blocks.append(
             f"""<div class="trow">
               <a href="{url}" target="_blank">{html.escape(subject or '(untitled)')}</a>
               <span class="meta">{span}</span>
-              <span class="cnt">{posts:,}</span>
-            </div>""",
-            unsafe_allow_html=True,
+              <span class="cnt">{(posts or 0):,}</span>
+            </div>"""
         )
+    st.markdown("\n".join(blocks), unsafe_allow_html=True)
