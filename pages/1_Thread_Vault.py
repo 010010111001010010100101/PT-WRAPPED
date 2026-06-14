@@ -61,7 +61,7 @@ def _search(term, setlists, sort, limit=150):
         "Oldest": "first_date ASC",
         "Recently active": "last_date DESC, posts DESC",
         "Longest-running": "(julianday(last_date) - julianday(first_date)) DESC, posts DESC",
-        "Most intense": "(posts * 1.0 / (julianday(last_date) - julianday(first_date) + 1)) DESC",
+        "Fastest growing": "(posts * 1.0 / (julianday(last_date) - julianday(first_date) + 1)) DESC",
         "Title A–Z": "subject COLLATE NOCASE ASC",
     }[sort]
     where = ["1=1"]
@@ -104,7 +104,7 @@ st.caption(f"Every PT thread with {meta.get('min_posts','50')}+ posts — "
 c1, c2 = st.columns([3, 2])
 term = c1.text_input("Search thread titles", placeholder="e.g. coventry, sphere, treason").strip()
 sort = c2.selectbox("Sort", ["Most posts", "Newest", "Oldest", "Recently active",
-                             "Longest-running", "Most intense", "Title A–Z"])
+                             "Longest-running", "Fastest growing", "Title A–Z"])
 setlists = st.checkbox("Include setlist threads", value=False)
 
 rows = _search(term, setlists, sort)
