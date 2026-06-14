@@ -73,6 +73,15 @@ if not os.path.exists(DB):
     st.error("Thread archive missing — run build_archive.py first.")
     st.stop()
 
+# Guard against a stale/empty archive.db on the host (Streamlit Cloud can keep
+# an old copy if the file's git blob hasn't changed) — fail with a clear note
+# instead of a raw "no such table" traceback.
+if not _db().execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='threads'").fetchone():
+    st.error("Thread archive is present but empty on this host — the deployed copy "
+             "is stale. Reboot the app (or clear cache) to re-pull the data file.")
+    st.stop()
+
 meta = _meta()
 try:
     st.page_link("app.py", label="← Back to PT Wrapped")
