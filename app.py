@@ -132,7 +132,10 @@ def _db():
 
 @st.cache_data(ttl=600)
 def _meta():
-    return dict(_db().execute("SELECT key, value FROM meta"))
+    try:
+        return dict(_db().execute("SELECT key, value FROM meta"))
+    except sqlite3.OperationalError:
+        return {}
 
 
 @st.cache_data(ttl=600)
@@ -197,6 +200,16 @@ if not os.path.exists(DB):
     st.stop()
 
 meta = _meta()
+# Guard against a stale/empty wrapped_<year>.db on the host (Streamlit Cloud can
+# serve an old copy across reboots) — show a clear note instead of a KeyError crash.
+if "total" not in meta:
+    # Don't let a transient empty read (boot race / mid-sync data file) stay cached
+    # for the full ttl — drop the caches so the next refresh retries from scratch.
+    _meta.clear()
+    _db.clear()
+    st.error("Wrapped data is present but empty on this host — the deployed copy "
+             "is stale. Reboot the app, or just refresh in a few seconds.")
+    st.stop()
 total, unique = int(meta["total"]), int(meta["unique"])
 n_posters = _db().execute("SELECT COUNT(*) FROM user_stats").fetchone()[0]
 

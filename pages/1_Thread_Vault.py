@@ -88,8 +88,12 @@ if not os.path.exists(DB):
 # instead of a raw "no such table" traceback.
 if not _db().execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='threads'").fetchone():
+    # Drop caches so a transient empty read (boot race / mid-sync) self-heals on the
+    # next refresh instead of being frozen in cache.
+    _meta.clear()
+    _db.clear()
     st.error("Thread archive is present but empty on this host — the deployed copy "
-             "is stale. Reboot the app (or clear cache) to re-pull the data file.")
+             "is stale. Reboot the app, or just refresh in a few seconds.")
     st.stop()
 
 meta = _meta()
