@@ -39,14 +39,14 @@ h1 {
 
 
 @st.cache_resource
-def _db():
+def _adb():
     return sqlite3.connect(DB, check_same_thread=False)
 
 
 @st.cache_data
-def _meta():
+def _ameta():
     try:
-        return dict(_db().execute("SELECT key, value FROM meta"))
+        return dict(_adb().execute("SELECT key, value FROM meta"))
     except sqlite3.OperationalError:
         return {}
 
@@ -74,7 +74,7 @@ def _search(term, setlists, sort, yr_lo, yr_hi, limit=150):
     where.append("first_date >= ? AND first_date <= ?")
     params.extend([f"{yr_lo}-01-01", f"{yr_hi}-12-31"])
     params.append(limit)
-    return _db().execute(
+    return _adb().execute(
         f"SELECT subject, slug, topic_id, posts, first_date, last_date FROM threads "
         f"WHERE {' AND '.join(where)} ORDER BY {order} LIMIT ?", params).fetchall()
 
@@ -86,17 +86,17 @@ if not os.path.exists(DB):
 # Guard against a stale/empty archive.db on the host (Streamlit Cloud can keep
 # an old copy if the file's git blob hasn't changed) — fail with a clear note
 # instead of a raw "no such table" traceback.
-if not _db().execute(
+if not _adb().execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='threads'").fetchone():
     # Drop caches so a transient empty read (boot race / mid-sync) self-heals on the
     # next refresh instead of being frozen in cache.
-    _meta.clear()
-    _db.clear()
+    _ameta.clear()
+    _adb.clear()
     st.error("Thread archive is present but empty on this host — the deployed copy "
              "is stale. Reboot the app, or just refresh in a few seconds.")
     st.stop()
 
-meta = _meta()
+meta = _ameta()
 try:
     st.page_link("app.py", label="← Back to PT Wrapped")
 except Exception:
