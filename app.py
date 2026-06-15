@@ -309,7 +309,9 @@ if username:
         with col_flop:
             if flops:
                 st.markdown("##### Threads nobody came to")
-                st.caption("You started them. The board shrugged.")
+                n = u.get("threads_started") or 0
+                st.caption(f"Your {len(flops)} quietest of the {n:,} you started. "
+                           "The board shrugged.")
                 for subj, pc in flops:
                     replies = max(pc - 1, 0)
                     label = "0 replies" if replies == 0 else f"{replies:,} replies"
