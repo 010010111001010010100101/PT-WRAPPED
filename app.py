@@ -309,11 +309,21 @@ if username:
                         </div>""",
                         unsafe_allow_html=True,
                     )
-        if u.get("top_started") and u.get("top_started_posts"):
-            drew = ("hit the 499 cap" if u["top_started_posts"] >= 499
-                    else f"drew {u['top_started_posts']:,} posts")
-            _card("Best thread you started", html.escape(u["top_started"]),
-                  drew, accent="#ffd166")
+        started = json.loads(u.get("started_threads") or "[]")
+        if started:
+            st.markdown("##### What you built")
+            st.caption("Your biggest threads — the ones you actually started.")
+            for subj, pc in started:
+                tag = "499 — capped" if pc >= 499 else f"{pc:,} posts"
+                st.markdown(
+                    f"""<div style="display:flex;gap:10px;background:#14141c;
+                        border:1px solid #26262f;border-radius:10px;
+                        padding:8px 14px;margin:5px 0;">
+                      <div style="flex:1;color:#e8e6e3;font-size:14px;">{html.escape(subj or '?')}</div>
+                      <div style="color:#ffd166;font-weight:700;white-space:nowrap;">{tag}</div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
 
         hours = json.loads(u["hours"])
         if any(hours):
