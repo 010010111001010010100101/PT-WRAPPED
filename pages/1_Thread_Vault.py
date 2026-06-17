@@ -3,7 +3,8 @@ with a permanent link so it survives PT's 3-month lock. Reads archive.db
 (built by pt_webapp/build_archive.py). No raw post data.
 """
 import streamlit as st
-import datetime, html, os, sqlite3
+import datetime, html, os, re, sqlite3
+from collections import Counter, defaultdict
 
 DB = os.path.join(os.path.dirname(__file__), "..", "data", "archive.db")
 PT = "https://www.phantasytour.com/bands/1/threads"
@@ -79,6 +80,39 @@ def _search(term, setlists, sort, yr_lo, yr_hi, limit=150):
         f"WHERE {' AND '.join(where)} ORDER BY {order} LIMIT ?", params).fetchall()
 
 
+# Words too common or structural to be interesting as thread-title keywords.
+STOP_WORDS = {
+    'a','about','above','after','ah','all','also','amp','an','and','any','are','as','at',
+    'back','be','been','before','being','below','bold','both','br','but','by','can','cant',
+    'code','color','com','come','could','did','didnt','do','does','doesnt','dont','down',
+    'during','each','either','else','even','every','for','from','get','good','got','gt','had',
+    'has','have','he','her','here','hes','hey','his','how','http','https','i','id','if','ill',
+    'im','img','in','into','is','it','its','ive','just','know','like','ll','lol','look','lt',
+    'make','may','me','might','more','my','nah','nbsp','need','neither','new','no','nope','nor',
+    'not','now','nt','of','off','oh','ok','okay','on','one','only','or','our','out','over',
+    'post','posts','pt','quote','re','right','s','said','same','say','see','shall','she','shes',
+    'should','size','so','some','spoiler','still','t','take','than','that','thats','the','their',
+    'them','then','there','these','they','theyre','think','this','those','thread','through',
+    'time','to','too','two','uh','um','under','up','url','used','user','ve','very','want','was',
+    'way','we','well','were','what','when','where','which','who','whom','why','will','with',
+    'wont','would','wow','www','yeah','yep','yes','yet','you','your','youre',
+}
+
+
+@st.cache_data(show_spinner=False)
+def _keywords_by_year():
+    """{year -> Counter(word)} from thread titles, setlist threads excluded."""
+    by_year = defaultdict(Counter)
+    for subj, yr in _adb().execute(
+            "SELECT subject, substr(first_date, 1, 4) FROM threads WHERE is_setlist = 0"):
+        if not yr:
+            continue
+        toks = [w for w in re.findall(r"[a-z]{3,}", (subj or "").lower())
+                if w not in STOP_WORDS]
+        by_year[yr].update(toks)
+    return dict(by_year)
+
+
 if not os.path.exists(DB):
     st.error("Thread archive missing — run build_archive.py first.")
     st.stop()
@@ -106,6 +140,33 @@ st.caption(f"A growing archive of PT's biggest threads ({meta.get('min_posts','5
            f"{int(meta.get('thread_count', 0)):,} so far. Recent years (≈2017–{meta.get('span_hi','')[:4]}) "
            "are complete; older years are still backfilling. "
            "Threads lock after 3 months, but the link lives here forever. Search and dig in.")
+
+with st.expander("🔤 Top keywords in thread titles", expanded=False):
+    kw = _keywords_by_year()
+    years_avail = sorted((y for y in kw if y.isdigit()), reverse=True)
+    k1, k2 = st.columns([2, 3])
+    sel_yr = k1.selectbox("Year", ["All-time"] + years_avail, key="kw_year")
+    top_n = k2.slider("How many", 10, 40, 20, key="kw_n")
+    if sel_yr == "All-time":
+        counts = Counter()
+        for c in kw.values():
+            counts.update(c)
+    else:
+        counts = kw.get(sel_yr, Counter())
+    top = counts.most_common(top_n)
+    if not top:
+        st.info("No keywords for that year yet.")
+    else:
+        st.caption(f"Most common words in titles of threads started in "
+                   f"{'any year' if sel_yr == 'All-time' else sel_yr} "
+                   "(setlist threads and common words excluded).")
+        st.markdown("\n".join(
+            f"""<div class="trow">
+              <span class="meta">#{i}</span>
+              <span style="flex:1;color:#e8e6e3;">{html.escape(word)}</span>
+              <span class="cnt">{n:,}</span>
+            </div>""" for i, (word, n) in enumerate(top, 1)),
+            unsafe_allow_html=True)
 
 c1, c2 = st.columns([3, 2])
 term = c1.text_input("Search thread titles", placeholder="e.g. coventry, sphere, treason").strip()
