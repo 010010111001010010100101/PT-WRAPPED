@@ -53,7 +53,7 @@ def _ameta():
 
 
 @st.cache_data(show_spinner=False)
-def _search(term, setlists, sort, yr_lo, yr_hi, limit=150):
+def _search(term, setlists, big, sort, yr_lo, yr_hi, limit=150):
     # Span/intensity use julianday on the YYYY-MM-DD date strings; +1 day avoids
     # divide-by-zero on same-day threads. ORDER strings are fixed (not user input).
     order = {
@@ -72,6 +72,8 @@ def _search(term, setlists, sort, yr_lo, yr_hi, limit=150):
         params.append(f"%{term}%")
     if not setlists:
         where.append("is_setlist = 0")
+    if not big:
+        where.append("posts <= 499")
     where.append("first_date >= ? AND first_date <= ?")
     params.extend([f"{yr_lo}-01-01", f"{yr_hi}-12-31"])
     params.append(limit)
@@ -179,9 +181,11 @@ if span_hi > span_lo:
     yr_lo, yr_hi = st.slider("Year started", span_lo, span_hi, (span_lo, span_hi))
 else:
     yr_lo, yr_hi = span_lo, span_hi
-setlists = st.checkbox("Include setlist threads", value=False)
+sc1, sc2 = st.columns(2)
+setlists = sc1.checkbox("Include setlist threads", value=False)
+big = sc2.checkbox("Include threads over 499", value=False)
 
-rows = _search(term, setlists, sort, yr_lo, yr_hi)
+rows = _search(term, setlists, big, sort, yr_lo, yr_hi)
 if not rows:
     st.info("No threads match. Try a shorter or different term.")
 else:
