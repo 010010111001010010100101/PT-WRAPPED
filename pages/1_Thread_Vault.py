@@ -183,7 +183,7 @@ else:
     yr_lo, yr_hi = span_lo, span_hi
 sc1, sc2 = st.columns(2)
 setlists = sc1.checkbox("Include setlist threads", value=False)
-big = sc2.checkbox("Include threads over 499", value=False)
+big = sc2.checkbox("Include threads over 499", value=True)
 
 rows = _search(term, setlists, big, sort, yr_lo, yr_hi)
 if not rows:
