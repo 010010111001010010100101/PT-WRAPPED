@@ -3,11 +3,27 @@ with a permanent link so it survives PT's 3-month lock. Reads archive.db
 (built by pt_webapp/build_archive.py). No raw post data.
 """
 import streamlit as st
-import datetime, html, os, re, sqlite3
+import datetime, gzip, html, os, re, shutil, sqlite3
 from collections import Counter, defaultdict
 
 DB = os.path.join(os.path.dirname(__file__), "..", "data", "archive.db")
+GZ = DB + ".gz"
 PT = "https://www.phantasytour.com/bands/1/threads"
+
+
+def _ensure_db():
+    """The repo ships archive.db.gz (the raw .db is over GitHub's 100 MB limit).
+    Decompress it on first boot, and refresh if a newer .gz was pulled. Write to
+    a temp file + atomic rename so a concurrent boot request never opens a
+    half-written DB."""
+    if not os.path.exists(GZ):
+        return  # local dev: a raw .db may already be present with no .gz
+    if os.path.exists(DB) and os.path.getmtime(DB) >= os.path.getmtime(GZ):
+        return
+    tmp = f"{DB}.tmp.{os.getpid()}"
+    with gzip.open(GZ, "rb") as fin, open(tmp, "wb") as fout:
+        shutil.copyfileobj(fin, fout, length=1 << 20)
+    os.replace(tmp, DB)
 
 st.set_page_config(page_title="PT Thread Vault", page_icon="🧵", layout="centered")
 
@@ -53,7 +69,7 @@ def _ameta():
 
 
 @st.cache_data(show_spinner=False)
-def _search(term, setlists, big, sort, yr_lo, yr_hi, limit=150):
+def _search(term, setlists, big, min50, sort, yr_lo, yr_hi, limit=150):
     # Span/intensity use julianday on the YYYY-MM-DD date strings; +1 day avoids
     # divide-by-zero on same-day threads. ORDER strings are fixed (not user input).
     order = {
@@ -74,6 +90,8 @@ def _search(term, setlists, big, sort, yr_lo, yr_hi, limit=150):
         where.append("is_setlist = 0")
     if not big:
         where.append("posts <= 499")
+    if min50:
+        where.append("posts >= 50")
     where.append("first_date >= ? AND first_date <= ?")
     params.extend([f"{yr_lo}-01-01", f"{yr_hi}-12-31"])
     params.append(limit)
@@ -115,6 +133,8 @@ def _keywords_by_year():
     return dict(by_year)
 
 
+_ensure_db()
+
 if not os.path.exists(DB):
     st.error("Thread archive missing — run build_archive.py first.")
     st.stop()
@@ -138,7 +158,7 @@ try:
 except Exception:
     st.markdown("[← Back to PT Wrapped](/)")
 st.title("PT Thread Vault")
-st.caption(f"A growing archive of PT's biggest threads ({meta.get('min_posts','50')}+ posts) — "
+st.caption(f"A growing archive of every PT thread — "
            f"{int(meta.get('thread_count', 0)):,} so far. Recent years (≈2017–{meta.get('span_hi','')[:4]}) "
            "are complete; older years are still backfilling. "
            "Threads lock after 3 months, but the link lives here forever. Search and dig in.")
@@ -181,11 +201,12 @@ if span_hi > span_lo:
     yr_lo, yr_hi = st.slider("Year started", span_lo, span_hi, (span_lo, span_hi))
 else:
     yr_lo, yr_hi = span_lo, span_hi
-sc1, sc2 = st.columns(2)
+sc1, sc2, sc3 = st.columns(3)
 setlists = sc1.checkbox("Include setlist threads", value=False)
 big = sc2.checkbox("Include threads over 499", value=True)
+min50 = sc3.checkbox("Only 50+ posts", value=False)
 
-rows = _search(term, setlists, big, sort, yr_lo, yr_hi)
+rows = _search(term, setlists, big, min50, sort, yr_lo, yr_hi)
 if not rows:
     st.info("No threads match. Try a shorter or different term.")
 else:

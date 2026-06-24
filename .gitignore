@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# Raw archive DB is built from the committed .gz at boot — too big for GitHub (>100 MB).
+# Commit data/archive.db.gz, never the raw .db.
+data/archive.db
+data/archive.db.tmp.*
