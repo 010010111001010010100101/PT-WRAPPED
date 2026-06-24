@@ -74,6 +74,7 @@ def _search(term, setlists, big, min50, sort, yr_lo, yr_hi, limit=150):
     # divide-by-zero on same-day threads. ORDER strings are fixed (not user input).
     order = {
         "Most posts": "posts DESC",
+        "Least posts": "posts ASC",
         "Newest": "first_date DESC",
         "Oldest": "first_date ASC",
         "Recently active": "last_date DESC, posts DESC",
@@ -192,7 +193,7 @@ with st.expander("🔤 Top keywords in thread titles", expanded=False):
 
 c1, c2 = st.columns([3, 2])
 term = c1.text_input("Search thread titles", placeholder="e.g. coventry, sphere, treason").strip()
-sort = c2.selectbox("Sort", ["Most posts", "Newest", "Oldest", "Recently active",
+sort = c2.selectbox("Sort", ["Most posts", "Least posts", "Newest", "Oldest", "Recently active",
                              "Longest-running", "Fastest growing", "Title A–Z"])
 
 span_lo = int((meta.get("span_lo") or "2002")[:4])
