@@ -68,8 +68,16 @@ def _ameta():
         return {}
 
 
+@st.cache_data
+def _has_starter():
+    """Older archives (built before the starter column existed) lack it — detect so
+    the username search degrades cleanly instead of throwing 'no such column'."""
+    return any(r[1] == "starter"
+               for r in _adb().execute("PRAGMA table_info(threads)").fetchall())
+
+
 @st.cache_data(show_spinner=False)
-def _search(term, setlists, big, min50, sort, yr_lo, yr_hi, limit=150):
+def _search(term, user, setlists, big, min50, sort, yr_lo, yr_hi, limit=150):
     # Span/intensity use julianday on the YYYY-MM-DD date strings; +1 day avoids
     # divide-by-zero on same-day threads. ORDER strings are fixed (not user input).
     order = {
@@ -87,6 +95,9 @@ def _search(term, setlists, big, min50, sort, yr_lo, yr_hi, limit=150):
     if term:
         where.append("subject LIKE ?")
         params.append(f"%{term}%")
+    if user and _has_starter():
+        where.append("starter LIKE ?")
+        params.append(f"%{user}%")
     if not setlists:
         where.append("is_setlist = 0")
     if not big:
@@ -96,9 +107,10 @@ def _search(term, setlists, big, min50, sort, yr_lo, yr_hi, limit=150):
     where.append("first_date >= ? AND first_date <= ?")
     params.extend([f"{yr_lo}-01-01", f"{yr_hi}-12-31"])
     params.append(limit)
+    starter_col = "starter" if _has_starter() else "'' AS starter"
     return _adb().execute(
-        f"SELECT subject, slug, topic_id, posts, first_date, last_date FROM threads "
-        f"WHERE {' AND '.join(where)} ORDER BY {order} LIMIT ?", params).fetchall()
+        f"SELECT subject, slug, topic_id, posts, first_date, last_date, {starter_col} "
+        f"FROM threads WHERE {' AND '.join(where)} ORDER BY {order} LIMIT ?", params).fetchall()
 
 
 # Words too common or structural to be interesting as thread-title keywords.
@@ -195,6 +207,11 @@ c1, c2 = st.columns([3, 2])
 term = c1.text_input("Search thread titles", placeholder="e.g. coventry, sphere, treason").strip()
 sort = c2.selectbox("Sort", ["Most posts", "Least posts", "Newest", "Oldest", "Recently active",
                              "Longest-running", "Fastest growing", "Title A–Z"])
+if _has_starter():
+    user = st.text_input("Started by (username)",
+                         placeholder="optional — e.g. someuser (partial matches ok)").strip()
+else:
+    user = ""
 
 span_lo = int((meta.get("span_lo") or "2002")[:4])
 span_hi = int((meta.get("span_hi") or str(datetime.date.today().year))[:4])
@@ -207,7 +224,7 @@ setlists = sc1.checkbox("Include setlist threads", value=False)
 big = sc2.checkbox("Include threads over 499", value=True)
 min50 = sc3.checkbox("Only 50+ posts", value=False)
 
-rows = _search(term, setlists, big, min50, sort, yr_lo, yr_hi)
+rows = _search(term, user, setlists, big, min50, sort, yr_lo, yr_hi)
 if not rows:
     st.info("No threads match. Try a shorter or different term.")
 else:
@@ -216,13 +233,15 @@ else:
     # Render all rows in one markdown call — 150 separate st.markdown widgets made
     # every keystroke re-render the whole list, freezing the search box.
     blocks = []
-    for subject, slug, tid, posts, first, last in rows:
+    for subject, slug, tid, posts, first, last, starter in rows:
         url = f"{PT}/{tid}/{slug}" if tid else "#"
         lo, hi = (first or "")[:7], (last or "")[:7]
         span = lo if lo == hi else f"{lo} → {hi}".strip(" →")
+        by = f'<span class="meta">by {html.escape(starter)}</span>' if starter else ""
         blocks.append(
             f"""<div class="trow">
               <a href="{url}" target="_blank">{html.escape(subject or '(untitled)')}</a>
+              {by}
               <span class="meta">{span}</span>
               <span class="cnt">{(posts or 0):,}</span>
             </div>"""
